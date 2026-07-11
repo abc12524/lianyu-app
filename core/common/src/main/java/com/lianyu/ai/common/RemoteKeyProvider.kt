@@ -29,4 +29,9 @@ object RemoteKeyProvider {
      */
     suspend fun fetchKeysAsync(context: Context, forceRefresh: Boolean = false): List<String> =
         withContext(Dispatchers.IO) { emptyList() }
+
+    /**
+     * Open-source stub: no-op since there is no bundled relay server.
+     */
+    fun storeHandshakeResult(context: Context, result: JSONObject) = Unit
 }
