@@ -37,6 +37,13 @@ jobs:
       - name: Validate Gradle Wrapper
         run: ./gradlew --version
 
+      - name: Generate debug keystore
+        run: |
+          if [ ! -f release.keystore ]; then
+            echo "Generating dummy release.keystore for CI build..."
+            keytool -genkey -v -keystore release.keystore               -alias your_alias -keyalg RSA -keysize 2048 -validity 10000               -storepass debug_password_placeholder               -keypass debug_password_placeholder               -dname "CN=CI, OU=Build, O=LianYu, L=, S=, C="
+          fi
+
       - name: Auto-increment versionCode
         run: |
           OLD=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
