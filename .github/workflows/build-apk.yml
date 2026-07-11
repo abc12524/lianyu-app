@@ -31,20 +31,20 @@ jobs:
         with:
           cache-disabled: true
 
+      - name: Fix gradlew permission
+        run: chmod +x gradlew
+
       - name: Validate Gradle Wrapper
         run: ./gradlew --version
 
       - name: Auto-increment versionCode
         run: |
-          # 读取当前 versionCode 并 +1
           OLD=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
           NEW=$((OLD + 1))
           sed -i "s/versionCode = $OLD/versionCode = $NEW/" app/build.gradle.kts
           echo "versionCode: $OLD -> $NEW"
-
-          # versionName 追加构建编号
-          sed -i 's/versionName = "\(.*\)"/versionName = "\1.build.'$GITHUB_RUN_NUMBER'"/' app/build.gradle.kts
-          echo "versionName 已追加 build.$GITHUB_RUN_NUMBER"
+          sed -i 's/versionName = "\(.*\)"/versionName = ".build.'$GITHUB_RUN_NUMBER'"/' app/build.gradle.kts
+          echo "versionName build.$GITHUB_RUN_NUMBER"
 
       - name: Build Debug APK
         run: |
@@ -57,18 +57,11 @@ jobs:
           LIANYU_KEY_ALIAS: ${{ secrets.LIANYU_KEY_ALIAS }}
           LIANYU_KEY_PASSWORD: ${{ secrets.LIANYU_KEY_PASSWORD }}
         run: |
-          # Release 构建需要先在 GitHub Secrets 中配置签名信息
           if [ -n "$LIANYU_STORE_PASSWORD" ] && [ -n "$LIANYU_KEY_ALIAS" ] && [ -n "$LIANYU_KEY_PASSWORD" ]; then
-            # 将 keystore 从 Secrets 解码出来
             echo "${{ secrets.LIANYU_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
             ./gradlew assembleRelease --no-daemon --stacktrace --no-build-cache
           else
-            echo "⚠️ Release 签名 Secrets 未配置，跳过 Release 构建"
-            echo "如需 Release 构建，请在 Settings > Secrets and variables > Actions 中配置："
-            echo "  - LIANYU_KEYSTORE_BASE64: 签名文件 base64"
-            echo "  - LIANYU_STORE_PASSWORD:  store 密码"
-            echo "  - LIANYU_KEY_ALIAS:       别名"
-            echo "  - LIANYU_KEY_PASSWORD:    key 密码"
+            echo "WARNING: Release signing Secrets not configured, skipping Release build"
           fi
 
       - name: Rename Debug APK
@@ -125,12 +118,11 @@ jobs:
           tag_name: ${{ steps.rename_debug.outputs.tag }}
           name: "LianYu v${{ steps.rename_debug.outputs.version }}"
           body: |
-            自动构建 APK。
-
-            - 版本: `${{ steps.rename_debug.outputs.version }}`
+            Auto-built APK.
+            - Version: `${{ steps.rename_debug.outputs.version }}`
             - Commit: `${{ github.sha }}`
-            - 触发: `${{ github.event_name }}`
-            - 分支: `${{ github.ref_name }}`
+            - Event: `${{ github.event_name }}`
+            - Branch: `${{ github.ref_name }}`
           prerelease: true
           files: |
             ${{ steps.rename_debug.outputs.apk_path }}
