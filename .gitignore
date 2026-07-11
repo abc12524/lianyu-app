@@ -69,3 +69,6 @@ _push_tmp/
 .hermes/
 .trae/
 MODULE_ARCHITECTURE.pdf
+
+# CodeGraph索引
+.codegraph/
