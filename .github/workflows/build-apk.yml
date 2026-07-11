@@ -37,12 +37,12 @@ jobs:
       - name: Validate Gradle Wrapper
         run: ./gradlew --version
 
-      - name: Generate debug keystore
+      - name: Switch debug to unsigned (CI doesn't need store signing)
         run: |
-          if [ ! -f release.keystore ]; then
-            echo "Generating dummy release.keystore for CI build..."
-            keytool -genkey -v -keystore release.keystore               -alias your_alias -keyalg RSA -keysize 2048 -validity 10000               -storepass debug_password_placeholder               -keypass debug_password_placeholder               -dname "CN=CI, OU=Build, O=LianYu, L=, S=, C="
-          fi
+          # Debug 构建去除签名配置 — 使用默认 Android debug 签名
+          sed -i '/^[[:space:]]*debug {/,/^[[:space:]]*}/{/signingConfig/d}' app/build.gradle.kts
+          # 密码兜底
+          sed -i 's|"debug_password_placeholder"|"android"|' app/build.gradle.kts
 
       - name: Auto-increment versionCode
         run: |
