@@ -310,7 +310,7 @@ fun MainScreen(mainActivity: Activity) {
                 // === 聊天 ===
                 composable(MainRoute.Chat(0).route.replace("0", "{companionId}"), arguments = listOf(navArgument("companionId") { type = NavType.LongType })) { backStackEntry ->
                     val companionId = backStackEntry.arguments?.getLong("companionId") ?: 0L
-                    ChatScreen(companionId = companionId, onNavigateBack = { navController.popBackStack() }, onNavigateToDetail = { navController.navigate("chat_detail/$it") }, onNavigateToVoiceCall = { navController.navigate("voice_call/$it") })
+                    ChatScreen(companionId = companionId, onNavigateBack = { navController.popBackStack() }, onNavigateToDetail = { navController.navigate("chat_detail/$it") }, onNavigateToVoiceCall = { navController.navigate("voice_call/$it") }, onNavigateToBan = { navController.navigate("ban") })
                 }
                 composable(MainRoute.ChatDetail(0).route.replace("0", "{companionId}"), arguments = listOf(navArgument("companionId") { type = NavType.LongType })) { backStackEntry ->
                     val detailCompanionId = backStackEntry.arguments?.getLong("companionId") ?: 0L
@@ -396,6 +396,23 @@ fun MainScreen(mainActivity: Activity) {
                         onOriginOSAdaptionClick = { navController.navigate(MainRoute.OriginOSAdaption.route) },
                         onCoffeeClick = { navController.navigate(MainRoute.Coffee.route) },
                         onExperimentalFeaturesClick = { navController.navigate(MainRoute.ExperimentalFeatures.route) }
+                    )
+                }
+                composable(MainRoute.Ban.route) {
+                    BanScreen(
+                        onStartQuiz = { count -> navController.navigate(MainRoute.Quiz(count).route) },
+                        onExit = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    MainRoute.Quiz(0).route.replace("0", "{questionCount}"),
+                    arguments = listOf(navArgument("questionCount") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val count = backStackEntry.arguments?.getInt("questionCount") ?: 5
+                    QuizScreen(
+                        questionCount = count,
+                        onPass = { navController.popBackStack(MainRoute.Ban.route, inclusive = true) },
+                        onExit = { navController.popBackStack() }
                     )
                 }
                 composable(MainRoute.WeChatSettings.route) {

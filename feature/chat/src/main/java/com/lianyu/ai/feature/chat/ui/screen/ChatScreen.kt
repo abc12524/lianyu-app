@@ -148,7 +148,8 @@ fun ChatScreen(
     companionId: Long,
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (Long) -> Unit = {},
-    onNavigateToVoiceCall: (Long) -> Unit = {}
+    onNavigateToVoiceCall: (Long) -> Unit = {},
+    onNavigateToBan: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -322,10 +323,16 @@ fun ChatScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is ChatUiEvent.Error -> snackbarHostState.showSnackbar(
-                    message = event.message,
-                    duration = SnackbarDuration.Long
-                )
+                is ChatUiEvent.Error -> {
+                    if (event.message.contains("封禁")) {
+                        onNavigateToBan()
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            message = event.message,
+                            duration = SnackbarDuration.Long
+                        )
+                    }
+                }
                 is ChatUiEvent.ContentBlocked -> snackbarHostState.showSnackbar(
                     message = "内容已拦截: ${event.reason}",
                     duration = SnackbarDuration.Long

@@ -64,6 +64,10 @@ sealed class MainRoute(val route: String) {
     // === 数据备份 ===
     object DataBackup : MainRoute("data_backup")
 
+    // === 封禁与答题 ===
+    object Ban : MainRoute("ban")
+    data class Quiz(val questionCount: Int) : MainRoute("quiz/$questionCount")
+
     // === 瑞幸咖啡 ===
     object Coffee : MainRoute("coffee")
     /** 商品定制页：coffee/product/{deptId}/{productId} */
@@ -110,6 +114,8 @@ sealed class MainRoute(val route: String) {
             route == "wechat_bind" -> WeChatBind
             route == "qqbot_settings" -> QQBotSettings
             route == "data_backup" -> DataBackup
+            route == "ban" -> Ban
+            route?.startsWith("quiz/") == true -> Quiz(route.removePrefix("quiz/").toIntOrNull() ?: 5)
             route == "coffee" -> Coffee
             route == "coffee_settings" -> CoffeeSettings
             route == "coffee_token" -> CoffeeToken
