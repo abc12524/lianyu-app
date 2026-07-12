@@ -170,6 +170,16 @@ object BanManager {
         val banUntil = prefs.getLong(KEY_BAN_UNTIL, 0)
         val now = System.currentTimeMillis()
 
+        // 迁移：旧版本 HIGH/SEVERE 封禁在新策略下已放行
+        if (isBanned) {
+            val lastLevelStr = prefs.getString(KEY_LAST_VIOLATION_LEVEL, "LOW") ?: "LOW"
+            val lastLevel = try { ContentFilter.ViolationLevel.valueOf(lastLevelStr) } catch (_: Exception) { ContentFilter.ViolationLevel.LOW }
+            if (lastLevel.ordinal < ContentFilter.ViolationLevel.CRITICAL.ordinal) {
+                prefs.edit().putBoolean(KEY_IS_BANNED, false).putBoolean(KEY_QUIZ_PASSED, true).putLong(KEY_BAN_UNTIL, 0).apply()
+                return false
+            }
+        }
+
         return if (isBanned && banUntil > now) {
             true
         } else if (isBanned && banUntil <= now) {
@@ -198,6 +208,22 @@ object BanManager {
         val quizPassed = prefs.getBoolean(KEY_QUIZ_PASSED, false)
         val lastLevelStr = prefs.getString(KEY_LAST_VIOLATION_LEVEL, "LOW") ?: "LOW"
         val lastLevel = try { ContentFilter.ViolationLevel.valueOf(lastLevelStr) } catch (_: Exception) { ContentFilter.ViolationLevel.LOW }
+
+        // 迁移：旧版本 HIGH/SEVERE 封禁在新策略下已放行，自动解封
+        if (isCurrentlyBanned && lastLevel.ordinal < ContentFilter.ViolationLevel.CRITICAL.ordinal) {
+            prefs.edit()
+                .putBoolean(KEY_IS_BANNED, false)
+                .putBoolean(KEY_QUIZ_PASSED, true)
+                .putLong(KEY_BAN_UNTIL, 0)
+                .apply()
+            return BanInfo(
+                isBanned = false, banUntil = 0,
+                remainingDays = 0, remainingHours = 0, remainingMinutes = 0, remainingSeconds = 0,
+                reason = "", violationCount = violationCount,
+                levelName = "", currentLevel = ContentFilter.ViolationLevel.NONE,
+                finalDays = 0, quizRequired = false, quizQuestionCount = 0
+            )
+        }
 
         return if (isCurrentlyBanned && banUntil > now) {
             val remainingMs = banUntil - now
