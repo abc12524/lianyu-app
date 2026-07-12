@@ -193,9 +193,9 @@ object ContentFilter {
        if (text.isBlank()) return CheckResult(false, ViolationLevel.NONE, "", emptyList())
        val result = checkBlocking(text)
         if (!result.isViolating) return result
-        // P2-12: 阈值从 CRITICAL 降低到 HIGH，拦截 HIGH 及以上级别的违规
+        // 阈值：仅拦截 CRITICAL 及以上（HIGH 和 SEVERE 放行）
         return when {
-            result.level >= ViolationLevel.HIGH -> result
+            result.level >= ViolationLevel.CRITICAL -> result
             else -> CheckResult(false, ViolationLevel.NONE, "", emptyList())
         }
     }
@@ -369,9 +369,8 @@ object ContentFilter {
 
     fun checkOutputSafety(text: String): OutputSafetyResult {
         val result = check(text)
-        // 与输入侧 checkInput 保持一致：只对 HIGH 及以上级别做拦截，
-        // 避免语义检测 LOW/MEDIUM 误报把正常 AI 回复吞掉并导致误封。
-        val unsafe = result.isViolating && result.level >= ViolationLevel.HIGH
+        // 与输入侧 checkInput 保持一致：只对 CRITICAL 及以上级别做拦截，
+        val unsafe = result.isViolating && result.level >= ViolationLevel.CRITICAL
         if (unsafe) {
             Log.w(TAG, "checkOutputSafety: ${result.level} - ${result.reason}")
         }
