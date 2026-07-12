@@ -21,7 +21,7 @@ local.properties
 core/security/src/main/cpp/generated/
 
 # SECRETS — NEVER COMMIT
-release.keystore
+release.keystore (use ci.keystore instead)
 .lianyu_wb_key
 core/security/src/main/cpp/wb_tables.inc
 core/security/src/main/cpp/*_demo.inc

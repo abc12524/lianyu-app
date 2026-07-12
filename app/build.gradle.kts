@@ -49,16 +49,17 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("../release.keystore")
-            storePassword = System.getenv("LIANYU_STORE_PASSWORD") ?: project.findProperty("LIANYU_STORE_PASSWORD") as String? ?: "debug_password_placeholder"
-            keyAlias = System.getenv("LIANYU_KEY_ALIAS") ?: project.findProperty("LIANYU_KEY_ALIAS") as String? ?: "your_alias"
-            keyPassword = System.getenv("LIANYU_KEY_PASSWORD") ?: project.findProperty("LIANYU_KEY_PASSWORD") as String? ?: "debug_password_placeholder"
+            storeFile = file("../ci.keystore")
+            storePassword = "android"
+            keyAlias = "ci"
+            keyPassword = "android"
             enableV3Signing = true
         }
     }
 
     buildTypes {
         debug {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isDebuggable = true
         }
