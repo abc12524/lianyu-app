@@ -37,13 +37,6 @@ jobs:
       - name: Validate Gradle Wrapper
         run: ./gradlew --version
 
-      - name: Switch debug to unsigned (CI doesn't need store signing)
-        run: |
-          # Debug 构建去除签名配置 — 使用默认 Android debug 签名
-          sed -i '/^[[:space:]]*debug {/,/^[[:space:]]*}/{/signingConfig/d}' app/build.gradle.kts
-          # 密码兜底
-          sed -i 's|"debug_password_placeholder"|"android"|' app/build.gradle.kts
-
       - name: Auto-increment versionCode
         run: |
           OLD=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
@@ -64,12 +57,8 @@ jobs:
           LIANYU_KEY_ALIAS: ${{ secrets.LIANYU_KEY_ALIAS }}
           LIANYU_KEY_PASSWORD: ${{ secrets.LIANYU_KEY_PASSWORD }}
         run: |
-          if [ -n "$LIANYU_STORE_PASSWORD" ] && [ -n "$LIANYU_KEY_ALIAS" ] && [ -n "$LIANYU_KEY_PASSWORD" ]; then
-            echo "${{ secrets.LIANYU_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
-            ./gradlew assembleRelease --no-daemon --stacktrace --no-build-cache
-          else
-            echo "WARNING: Release signing Secrets not configured, skipping Release build"
-          fi
+          # ci.keystore 已提交到仓库，可直接用于签名
+          ./gradlew assembleRelease --no-daemon --stacktrace --no-build-cache
 
       - name: Rename Debug APK
         id: rename_debug
